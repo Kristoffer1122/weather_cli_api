@@ -25,7 +25,6 @@ async function fetchWeatherPrev() {
         const response = await fetch(API_URL);
         const data = await response.json();
 
-
         let snowy_flag = false;
         let rainy_flag = false;
         let cloudy_flag = false;
