@@ -28,6 +28,30 @@ Run the application:
 bun run weather.ts
 ```
 
+### Install as a global command
+
+To run the app by just typing `weather` from anywhere:
+
+1. Add a shebang to the top of `weather.ts`:
+   ```typescript
+   #!/usr/bin/env bun
+   ```
+
+2. Make the file executable:
+   ```bash
+   chmod +x weather.ts
+   ```
+
+3. Create a symlink in `/usr/local/bin`:
+   ```bash
+   sudo ln -s $(pwd)/weather.ts /usr/local/bin/weather
+   ```
+
+4. Now you can run it from anywhere:
+   ```bash
+   weather
+   ```
+
 ## Weather Data
 
 Weather data is fetched from [Open-Meteo API](https://open-meteo.com/) for Oslo, Norway.
