@@ -33,11 +33,9 @@ async function fetchWeatherPrev() {
         // Gives us Morning, Afternoon, Evening, Night
         let hours = [8, 14, 20, 2]
         // we will populate this with the states, so if its snowy, rainy, cloudy or sunny for each of the 4 time periods
-        let states = { 8: { snowy: true, rainy: false, cloudy: false }, 14: { snowy: false, rainy: true, cloudy: false }, 20: { snowy: false, rainy: false, cloudy: true }, 2: { snowy: false, rainy: false, cloudy: false } };
-        let temperatures: string[] = ['5', '12', '15', '8'];
+        let states = { 8: { snowy: false, rainy: false, cloudy: false }, 14: { snowy: false, rainy: false, cloudy: false }, 20: { snowy: false, rainy: false, cloudy: false }, 2: { snowy: false, rainy: false, cloudy: false } };
+        let temperatures: string[] = [];
 
-        // Dummy data - comment out below for real data
-        /*
         hours.filter((e) => {
             temperatures.push(data.hourly.temperature_2m[e])
 
@@ -56,7 +54,6 @@ async function fetchWeatherPrev() {
                 cloudy_flag = true;
             }
         });
-        */
 
         const terminalSize = getTerminalSize();
 
