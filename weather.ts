@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import chalk from "chalk"
 // @ts-ignore
 import asciiart from "./weather_ascii.json" assert { type: "json" };
