@@ -2,7 +2,7 @@
 import chalk from "chalk"
 // @ts-ignore
 import asciiart from "./weather_ascii.json" assert { type: "json" };
-const API_URL: string = 'https://api.open-meteo.com/v1/forecast?latitude=59.9127&longitude=10.7461&daily=sunrise,sunset,weather_code,uv_index_max&hourly=temperature_2m,snowfall,rain,cloud_cover,apparent_temperature&current=temperature_2m,apparent_temperature,rain,snowfall&timezone=Europe%2FBerlin&forecast_days=1'
+const API_URL: string = 'https://api.open-meteo.com/v1/forecast?latitude=59.9127&longitude=10.7461&daily=sunrise,sunset,weather_code,uv_index_max&hourly=temperature_2m,snowfall,rain,cloud_cover,apparent_temperature&current=temperature_2m,apparent_temperature,rain,snowfall&timezone=Europe%2FBerlin&forecast_days=2'
 
 const width = process.stdout.columns;
 const height = process.stdout.rows;
@@ -31,9 +31,10 @@ async function fetchWeatherPrev() {
         let cloudy_flag = false;
 
         // Gives us Morning, Afternoon, Evening, Night
-        let hours = [8, 14, 20, 2]
+        let hours = [8, 14, 20, 26] // 26 = 2am next day (tonight)
+        let displayHours = [8, 14, 20, 2] // What to display
         // we will populate this with the states, so if its snowy, rainy, cloudy or sunny for each of the 4 time periods
-        let states = { 8: { snowy: false, rainy: false, cloudy: false }, 14: { snowy: false, rainy: false, cloudy: false }, 20: { snowy: false, rainy: false, cloudy: false }, 2: { snowy: false, rainy: false, cloudy: false } };
+        let states = { 8: { snowy: false, rainy: false, cloudy: false }, 14: { snowy: false, rainy: false, cloudy: false }, 20: { snowy: false, rainy: false, cloudy: false }, 26: { snowy: false, rainy: false, cloudy: false } };
         let temperatures: string[] = [];
 
         hours.filter((e) => {
@@ -62,10 +63,9 @@ async function fetchWeatherPrev() {
 
         // Print header with hours and temperatures
         const artWidth = asciiArt[terminalSize].sunny[0].length;
-        const header = hours.map((hour, i) => {
+        const header = displayHours.map((hour, i) => {
             const timeText = formatHourTo12Hour(hour);
             const tempText = ` ${temperatures[i]}°C`;
-            const combined = (timeText + tempText).padEnd(artWidth);
             return chalk.bold.white(timeText) + chalk.bold.yellow(tempText) + ' '.repeat(artWidth - timeText.length - tempText.length);
         }).join('  ');
         console.log(header);
@@ -95,7 +95,7 @@ async function fetchWeatherPrev() {
 }
 
 
-// Helper function to convert 12-hour time format to 24-hour format
+// Helper function to convert 24-hour time format to 12-hour format
 function formatHourTo12Hour(time: number): string {
     let hour = time % 24;
     const minute = '00';
@@ -105,15 +105,8 @@ function formatHourTo12Hour(time: number): string {
     hour = hour % 12;
     hour = hour ? hour : 12;
 
-    // Convert based on AM/PM
-    if (ampm === 'AM' && hour === 12) {
-        hour = 0;
-    } else if (ampm === 'PM' && hour !== 12) {
-        hour += 12;
-    }
-
     // Return the formatted time
-    return `${hour}:${minute.slice(0, 2)} `;
+    return `${hour}:${minute.slice(0, 2)} ${ampm}`;
 }
 
 fetchWeatherPrev()
