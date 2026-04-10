@@ -21,57 +21,87 @@ function getTerminalSize(): TerminalSize {
     }
 }
 
+const RAIN_THRESHOLD = 0.5; // mm
+const SNOW_THRESHOLD = 0.1; // cm
+const CLOUD_THRESHOLD = 50; // %
+
+type WeatherState = {
+    snowy: boolean;
+    rainy: boolean;
+    cloudy: boolean;
+};
+
+type HourlyWeatherData = {
+    temperature_2m: number[];
+    snowfall: number[];
+    rain: number[];
+    cloud_cover: number[];
+};
+
 async function fetchWeather() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
 
-        // Gives us Morning, Afternoon, Evening, Night
-        let hours = [8, 14, 20, 26] // 26 = 2am next day (tonight)
-        let displayHours = [8, 14, 20, 2] // What to display
-        // we will populate this with the states, so if its snowy, rainy, cloudy or sunny for each of the 4 time periods
-        let states = { 8: { snowy: false, rainy: false, cloudy: false }, 14: { snowy: false, rainy: false, cloudy: false }, 20: { snowy: false, rainy: false, cloudy: false }, 26: { snowy: false, rainy: false, cloudy: false } };
-        let temperatures: string[] = [];
+        const hourlyData: HourlyWeatherData = data.hourly;
 
-        hours.filter((e) => {
-            temperatures.push(data.hourly.temperature_2m[e])
+        // Morning, Afternoon, Evening, Night (next day)
+        const hours = [8, 14, 20, 26];
+        const displayHours = [8, 14, 20, 2];
 
-            if (data.hourly.snowfall[e] > 4) {
-                states[e].snowy = true;
+        const states: Record<number, WeatherState> = {
+            8: { snowy: false, rainy: false, cloudy: false },
+            14: { snowy: false, rainy: false, cloudy: false },
+            20: { snowy: false, rainy: false, cloudy: false },
+            26: { snowy: false, rainy: false, cloudy: false }
+        };
+
+        const temperatures: number[] = [];
+
+        hours.forEach((hourIndex) => {
+            if (!hourlyData.temperature_2m[hourIndex]) {
+                throw new Error(`Missing weather data for hour ${hourIndex}`);
             }
 
-            if (data.hourly.rain[e] > 2) {
-                states[e].rainy = true;
-            }
+            temperatures.push(hourlyData.temperature_2m[hourIndex]);
 
-            if (data.hourly.cloud_cover[e] > 50) {
-                states[e].cloudy = true;
+            if (hourlyData.snowfall[hourIndex] > SNOW_THRESHOLD) {
+                states[hourIndex].snowy = true;
+            } else if (hourlyData.rain[hourIndex] > RAIN_THRESHOLD) {
+                states[hourIndex].rainy = true;
+            } else if (hourlyData.cloud_cover[hourIndex] > CLOUD_THRESHOLD) {
+                states[hourIndex].cloudy = true;
             }
         });
 
         const terminalSize = getTerminalSize();
-
-        // Get the number of lines in ASCII art
         const artLines = asciiArt[terminalSize].sunny.length;
+        const artWidth = asciiArt[terminalSize].sunny[0].length;
+
+        // Display current weather
+        console.log(chalk.bold.cyan('\n📍  Oslo, Norway'));
+        console.log(chalk.bold.white(`🌡️  Current: ${data.current.temperature_2m}°C (feels like ${data.current.apparent_temperature}°C)\n`));
 
         // Print header with hours and temperatures
-        const artWidth = asciiArt[terminalSize].sunny[0].length;
         const header = displayHours.map((hour, i) => {
             const timeText = formatHourTo12Hour(hour);
-            const tempText = ` ${temperatures[i]}°C`;
-            return chalk.bold.white(timeText) + chalk.bold.yellow(tempText) + ' '.repeat(artWidth - timeText.length - tempText.length);
+            const tempText = ` ${Math.round(temperatures[i])}°C`;
+            const padding = ' '.repeat(Math.max(0, artWidth - timeText.length - tempText.length));
+            return chalk.bold.white(timeText) + chalk.bold.yellow(tempText) + padding;
         }).join('  ');
         console.log(header);
 
         // Print each line of ASCII art horizontally
         for (let lineIndex = 0; lineIndex < artLines; lineIndex++) {
-            const lineSegments = hours.map((hour) => {
+            const lineSegments = hours.map((hourIndex) => {
+                const state = states[hourIndex];
                 let artLine = '';
-                if (states[hour].snowy) {
+
+                if (state.snowy) {
                     artLine = chalk.white(asciiArt[terminalSize].snowy[lineIndex]);
-                } else if (states[hour].rainy) {
+                } else if (state.rainy) {
                     artLine = chalk.cyan(asciiArt[terminalSize].rainy[lineIndex]);
-                } else if (states[hour].cloudy) {
+                } else if (state.cloudy) {
                     artLine = chalk.gray(asciiArt[terminalSize].cloudy[lineIndex]);
                 } else {
                     artLine = chalk.yellow(asciiArt[terminalSize].sunny[lineIndex]);
@@ -81,25 +111,27 @@ async function fetchWeather() {
             console.log(lineSegments.join('  '));
         }
 
-    }
-    catch (error) {
-        console.error('Error fetching weather data for next 12 hours:', error);
+        // Display UV index warning if high
+        const uvIndex = data.daily.uv_index_max[0];
+        if (uvIndex >= 6) {
+            console.log(chalk.yellow(`\n⚠️  High UV Index: ${uvIndex} - Use sunscreen!`));
+        }
+
+        console.log(); // Empty line at end
+
+    } catch (error) {
+        console.error(chalk.red('❌ Error fetching weather data:'), error);
+        process.exit(1);
     }
 }
 
 
-// Helper function to convert 24-hour time format to 12-hour format
 function formatHourTo12Hour(time: number): string {
     let hour = time % 24;
-    const minute = '00';
     const ampm = hour >= 12 ? 'PM' : 'AM';
-
-    // Convert hour to 12-hour format
     hour = hour % 12;
     hour = hour ? hour : 12;
-
-    // Return the formatted time
-    return `${hour}:${minute.slice(0, 2)} ${ampm}`;
+    return `${hour}:00 ${ampm}`;
 }
 
 fetchWeather()
