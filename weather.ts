@@ -21,14 +21,10 @@ function getTerminalSize(): TerminalSize {
     }
 }
 
-async function fetchWeatherPrev() {
+async function fetchWeather() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-
-        let snowy_flag = false;
-        let rainy_flag = false;
-        let cloudy_flag = false;
 
         // Gives us Morning, Afternoon, Evening, Night
         let hours = [8, 14, 20, 26] // 26 = 2am next day (tonight)
@@ -40,19 +36,16 @@ async function fetchWeatherPrev() {
         hours.filter((e) => {
             temperatures.push(data.hourly.temperature_2m[e])
 
-            if (data.hourly.snowfall[e] > 20) {
+            if (data.hourly.snowfall[e] > 4) {
                 states[e].snowy = true;
-                snowy_flag = true;
             }
 
-            if (data.hourly.rain[e] > 20) {
+            if (data.hourly.rain[e] > 2) {
                 states[e].rainy = true;
-                rainy_flag = true;
             }
 
             if (data.hourly.cloud_cover[e] > 50) {
                 states[e].cloudy = true;
-                cloudy_flag = true;
             }
         });
 
@@ -109,4 +102,4 @@ function formatHourTo12Hour(time: number): string {
     return `${hour}:${minute.slice(0, 2)} ${ampm}`;
 }
 
-fetchWeatherPrev()
+fetchWeather()
