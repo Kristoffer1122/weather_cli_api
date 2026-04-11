@@ -47,7 +47,6 @@ async function fetchWeather() {
 
         // Morning, Afternoon, Evening, Night (next day)
         const hours = [8, 14, 20, 26];
-        const displayHours = [8, 14, 20, 2];
 
         const states: Record<number, WeatherState> = {
             8: { snowy: false, rainy: false, cloudy: false },
@@ -83,7 +82,7 @@ async function fetchWeather() {
         console.log(chalk.bold.white(`🌡️  Current: ${data.current.temperature_2m}°C (feels like ${data.current.apparent_temperature}°C)\n`));
 
         // Print header with hours and temperatures
-        const header = displayHours.map((hour, i) => {
+        const header = hours.map((hour, i) => {
             const timeText = formatHourTo12Hour(hour);
             const tempText = ` ${Math.round(temperatures[i])}°C`;
             const padding = ' '.repeat(Math.max(0, artWidth - timeText.length - tempText.length));
