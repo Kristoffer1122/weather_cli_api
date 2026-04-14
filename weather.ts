@@ -22,7 +22,6 @@ async function getCoordinates(cityName: string): Promise<{ latitude: number; lon
     try {
         const locations: Location[] = await encode(cityName);
         if (locations.length > 0) {
-            console.log(`Latitude: ${locations[0].latitude}, Longitude: ${locations[0].longitude}`);
             return { latitude: locations[0].latitude, longitude: locations[0].longitude };
         }
     } catch (error) {
@@ -116,33 +115,35 @@ async function fetchWeather() {
         console.log(chalk.bold.cyan(`\n📍  ${city}`));
         console.log(chalk.bold.white(`🌡️  Current: ${data.current.temperature_2m}°C (feels like ${data.current.apparent_temperature}°C)\n`));
 
-        // Print header with hours and temperatures
-        const header = hours.map((hour, i) => {
+        // print header with hours and temperatures
+        let header = hours.map((hour, i) => {
             const timeText = formatHourTo12Hour(hour);
             const tempText = ` ${Math.round(temperatures[i])}°C`;
             const padding = ' '.repeat(Math.max(0, artWidth - timeText.length - tempText.length));
-            return chalk.bold.white(timeText) + chalk.bold.yellow(tempText) + padding;
-        }).join('  ');
+            return "| " + chalk.bold.white(timeText) + chalk.bold.yellow(tempText) + padding;
+        }).join(' ');
+        header += " |";
         console.log(header);
 
         // Print each line of ASCII art horizontally
         for (let lineIndex = 0; lineIndex < artLines; lineIndex++) {
             const lineSegments = hours.map((hourIndex) => {
                 const state = states[hourIndex];
-                let artLine = '';
+                let artLine = "";
 
                 if (state.snowy) {
-                    artLine = chalk.white(asciiArt[terminalSize].snowy[lineIndex]);
+                    artLine = `| ${chalk.white(asciiArt[terminalSize].snowy[lineIndex])}`;
                 } else if (state.rainy) {
-                    artLine = chalk.cyan(asciiArt[terminalSize].rainy[lineIndex]);
+                    artLine = `| ${chalk.cyan(asciiArt[terminalSize].rainy[lineIndex])}`;
                 } else if (state.cloudy) {
-                    artLine = chalk.gray(asciiArt[terminalSize].cloudy[lineIndex]);
+                    artLine = `| ${chalk.gray(asciiArt[terminalSize].cloudy[lineIndex])}`;
                 } else {
-                    artLine = chalk.yellow(asciiArt[terminalSize].sunny[lineIndex]);
+                    artLine = `| ${chalk.yellow(asciiArt[terminalSize].sunny[lineIndex])}`;
                 }
                 return artLine;
             });
-            console.log(lineSegments.join('  '));
+            lineSegments.push("|");
+            console.log(lineSegments.join(' '));
         }
 
     } catch (error) {
@@ -157,7 +158,7 @@ function formatHourTo12Hour(time: number): string {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12;
     hour = hour ? hour : 12;
-    return `${hour}:00 ${ampm}`;
+    return `${hour}:00${ampm}`;
 }
 
 fetchWeather()
