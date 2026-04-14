@@ -5,9 +5,18 @@ import { encode, Location } from '@aashari/nodejs-geocoding';
 // @ts-ignore
 import asciiart from "./weather_ascii.json" assert { type: "json" };
 
-let city = process.argv[2].slice(2);
-city = city.charAt(0).toUpperCase() + city.slice(1);
-console.log(chalk.blue(`📍 Fetching weather for: ${city}`));
+let city: string;
+
+if (process.argv.length >= 3) {
+    city = process.argv[2].slice(2);
+    city = city.charAt(0).toUpperCase() + city.slice(1);
+    console.log(chalk.blue(`📍 Fetching weather for: ${city}`));
+} else {
+    console.error(chalk.red('Error: No city provided. Please provide a city name as an argument.'));
+    console.error(chalk.yellow('Usage: weather --"City Name" [--data]'));
+    console.error(chalk.yellow(': bun run weather.ts --Paris'));
+    process.exit(1);
+}
 
 async function getCoordinates(cityName: string): Promise<{ latitude: number; longitude: number } | undefined> {
     try {
