@@ -43,6 +43,12 @@ async function fetchWeather() {
         const response = await fetch(API_URL);
         const data = await response.json();
 
+        if (process.argv.includes('--data')) {
+            console.log(chalk.blue('📊 Raw Weather Data:'));
+            console.log(JSON.stringify(data, null, 2));
+            console.log("\n");
+        }
+
         const hourlyData: HourlyWeatherData = data.hourly;
 
         // Morning, Afternoon, Evening, Night (next day)
