@@ -1,8 +1,28 @@
 #!/usr/bin/env bun
 import chalk from "chalk"
 // @ts-ignore
+import { encode, Location } from '@aashari/nodejs-geocoding';
+// @ts-ignore
 import asciiart from "./weather_ascii.json" assert { type: "json" };
-const API_URL: string = 'https://api.open-meteo.com/v1/forecast?latitude=59.9127&longitude=10.7461&daily=sunrise,sunset,weather_code,uv_index_max&hourly=temperature_2m,snowfall,rain,cloud_cover,apparent_temperature&current=temperature_2m,apparent_temperature,rain,snowfall&timezone=Europe%2FBerlin&forecast_days=2'
+
+let city = process.argv[2].slice(2);
+city = city.charAt(0).toUpperCase() + city.slice(1);
+console.log(chalk.blue(`📍 Fetching weather for: ${city}`));
+
+async function getCoordinates(cityName: string): Promise<{ latitude: number; longitude: number } | undefined> {
+    try {
+        const locations: Location[] = await encode(cityName);
+        if (locations.length > 0) {
+            console.log(`Latitude: ${locations[0].latitude}, Longitude: ${locations[0].longitude}`);
+            return { latitude: locations[0].latitude, longitude: locations[0].longitude };
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+const lat_long = await getCoordinates(city);
+const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${lat_long?.latitude}&longitude=${lat_long?.longitude}&daily=sunrise,sunset,weather_code,uv_index_max&hourly=temperature_2m,snowfall,rain,cloud_cover,apparent_temperature&current=temperature_2m,apparent_temperature,rain,snowfall&timezone=Europe%2FBerlin&forecast_days=2`
 
 const width = process.stdout.columns;
 const height = process.stdout.rows;
@@ -84,7 +104,7 @@ async function fetchWeather() {
         const artWidth = asciiArt[terminalSize].sunny[0].length;
 
         // Display current weather
-        console.log(chalk.bold.cyan('\n📍  Oslo, Norway'));
+        console.log(chalk.bold.cyan(`\n📍  ${city}`));
         console.log(chalk.bold.white(`🌡️  Current: ${data.current.temperature_2m}°C (feels like ${data.current.apparent_temperature}°C)\n`));
 
         // Print header with hours and temperatures
@@ -116,16 +136,8 @@ async function fetchWeather() {
             console.log(lineSegments.join('  '));
         }
 
-        // Display UV index warning if high
-        const uvIndex = data.daily.uv_index_max[0];
-        if (uvIndex >= 6) {
-            console.log(chalk.yellow(`\n⚠️  High UV Index: ${uvIndex} - Use sunscreen!`));
-        }
-
-        console.log(); // Empty line at end
-
     } catch (error) {
-        console.error(chalk.red('❌ Error fetching weather data:'), error);
+        console.error(chalk.red('Error fetching weather data:'), error);
         process.exit(1);
     }
 }

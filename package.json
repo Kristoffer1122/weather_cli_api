@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "@aashari/nodejs-geocoding": "^2.7.2",
     "@types/node": "^25.5.2",
     "chalk": "^5.6.2"
   }
