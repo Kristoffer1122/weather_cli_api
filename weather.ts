@@ -14,7 +14,7 @@ if (process.argv.length >= 3) {
 } else {
     console.error(chalk.red('Error: No city provided. Please provide a city name as an argument.'));
     console.error(chalk.yellow('Usage: weather --"City Name" [--data]'));
-    console.error(chalk.yellow(': bun run weather.ts --Paris'));
+    console.error(chalk.yellow('Example: bun run weather.ts --Paris'));
     process.exit(1);
 }
 
