@@ -134,7 +134,7 @@ async function fetchWeather() {
                 if (state.snowy) {
                     artLine = `| ${chalk.white(asciiArt[terminalSize].snowy[lineIndex])}`;
                 } else if (state.rainy) {
-                    artLine = `| ${chalk.cyan(asciiArt[terminalSize].rainy[lineIndex])}`;
+                    artLine = `| ${chalk.grey(asciiArt[terminalSize].rainy[lineIndex])}`;
                 } else if (state.cloudy) {
                     artLine = `| ${chalk.gray(asciiArt[terminalSize].cloudy[lineIndex])}`;
                 } else {
